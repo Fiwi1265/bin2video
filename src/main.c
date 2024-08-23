@@ -21,7 +21,7 @@
 #define DEFAULT_DATA_HEIGHT -1
 #define DEFAULT_BLOCK_SIZE 5
 //FIXME: Changing DEFAULT_FFMPEG does not actually change the default arguments
-#define DEFAULT_FFMPEG "-c:v libx264 -pix_fmt yuv420p"
+#define DEFAULT_FFMPEG "-c:v h264_nvenc -pix_fmt yuv420p"
 
 #if DEFAULT_BITS == 1
 #define DEFAULT_BITS_DESC " (black and white)"
@@ -145,7 +145,7 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	const char *default_encode_argv[] = { "-c:v", "libx264", "-pix_fmt", "yuv420p",
+	const char *default_encode_argv[] = { "-c:v", "h264_nvenc", "-pix_fmt", "yuv420p",
 		NULL };
 	const char **encode_argv = default_encode_argv;
 	if (optind != argc) {

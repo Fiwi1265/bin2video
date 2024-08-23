@@ -89,7 +89,7 @@ void b2v_context_realloc(struct b2v_context *ctx) {
 	if (ctx->buffer != NULL) free(ctx->buffer);
 	ctx->buffer_size = (blocks * ctx->bits_per_pixel) / 8 + 1;
 	ctx->buffer = malloc(ctx->buffer_size);
-	
+
 	if (ctx->image != NULL) free(ctx->image);
 	ctx->image = malloc(blocks * 3);
 
@@ -180,7 +180,7 @@ int b2v_fill_image(struct b2v_context *ctx, bool isg_mode) {
 	else {
 		metadata_end = sizeof(metadata) * 8;
 	}
-	
+
 	int image_idx = _b2v_fill_image_next(ctx->image, ctx->bits_per_pixel,
 		metadata_end, blocks, ctx->buffer, ctx->bytes_available, &ctx->tbit,
 		&ctx->tbyte, &buffer_idx, isg_mode);
@@ -285,7 +285,7 @@ int b2v_decode_image(struct b2v_context *ctx, bool isg_mode) {
 			&buffer_idx, false);
 		block_count = LOAD_UINT32(metadata);
 	}
-	
+
 	buffer_idx = 0;
 	int max_blocks = ctx->width * ctx->height;
 	int blocks = block_count;
@@ -321,7 +321,7 @@ int video_resolution(const char *file, int *width_pt, int *height_pt) {
 	const char *argv[] = { "ffprobe", "-v", "error", "-select_streams", "v:0",
 		"-show_entries", "stream=width,height", "-of", "csv=s=x:p=0", "--",
 		file, NULL };
-	
+
 	struct subprocess_s ffmpeg_process;
 	int subprocess_ret = spawn(argv, &ffmpeg_process, false);
 	if ( subprocess_ret != 0 ) {
@@ -379,8 +379,8 @@ int b2v_decode(const char *input, const char *output, int initial_block_size,
 		fprintf(stderr, "failed to get video resolution\n");
 		return EXIT_FAILURE;
 	}
-	
-	const char *argv[] = { "ffmpeg", "-i", input, "-f", "rawvideo", "-pix_fmt",
+
+	const char *argv[] = { "ffmpeg", "-hwaccel", "cuda", "-i", input, "-f", "rawvideo", "-pix_fmt",
 		"rgb24", "-v", "quiet", "-hide_banner", "-", NULL };
 	struct subprocess_s ffmpeg_process;
 	int subprocess_ret = spawn(argv, &ffmpeg_process, true);
@@ -507,7 +507,7 @@ int b2v_decode(const char *input, const char *output, int initial_block_size,
 
 	b2v_context_destroy(&ctx);
 	fclose(output_file);
-	
+
 	subprocess_destroy(&ffmpeg_process);
 	if (result == 0) {
 		return EXIT_SUCCESS;
@@ -540,7 +540,7 @@ int b2v_encode(const char *input, const char *output, int real_width,
 
 	int pixels = real_width * real_height;
 	int pad_height = real_width - data_height;
-	
+
 	struct b2v_context ctx;
 	b2v_context_init(&ctx, real_width / initial_block_size,
 		data_height / initial_block_size, 1, initial_block_size, pad_height);
@@ -605,8 +605,8 @@ int b2v_encode(const char *input, const char *output, int real_width,
 		// 1) prepares argv = argv_start + encode_argv + argv_end 
 		// 2) spawns ffmpeg with argv
 		{
-			const char *_argv_start[] = { "ffmpeg", "-framerate", framerate_str, "-s",
-				video_resolution, "-f", "rawvideo", "-pix_fmt", "rgb24", "-i", "-" };
+			const char *_argv_start[] = { "ffmpeg", "-hwaccel", "cuda", "-hwaccel_output_format", "cuda",
+				"-framerate", framerate_str, "-s", video_resolution, "-f", "rawvideo", "-pix_fmt", "rgb24", "-i", "-" };
 			int argv_start_len = sizeof(_argv_start) / sizeof(*_argv_start);
 			const char **argv_start = _argv_start;
 			if (framerate == -1) {
